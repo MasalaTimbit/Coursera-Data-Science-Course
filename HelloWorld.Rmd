@@ -1,7 +1,0 @@
----
-title: "HelloWorld"
-output: html_document
-date: "`r Sys.Date()`"
----
-
-##This is a markdown file
