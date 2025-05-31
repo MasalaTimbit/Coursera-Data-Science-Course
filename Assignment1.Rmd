@@ -1,0 +1,160 @@
+---
+title: "Assignment1"
+author: "Shashwati"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+library(tidyverse)
+```
+
+```{r setup, include=FALSE}
+pollutantmean <- function (directory, pollutant, id = 1:332) {
+  sums <- vector(mode = "numeric")
+  totalcount <- vector(mode = "numeric")
+  for (i in id){
+    monitorID <- list.files(directory, pattern = paste(sprintf("%03d", i),".csv", sep = ""), full.names = TRUE)
+    monitordata <- read.csv(monitorID)
+    pollutantlist <- subset.data.frame(monitordata, subset = !is.na(monitordata[pollutant]), select = pollutant, drop = TRUE)
+    sums <- c(sums, sum (pollutantlist))
+    totalcount <- c(totalcount, length(pollutantlist))
+  }
+  meanpollutant <- sum(sums) / sum(totalcount)
+  meanpollutant
+}
+```
+
+```{r}
+pollutantmean("specdata", "sulfate", 1:10)
+```
+
+
+```{r}
+pollutantmean("specdata", "nitrate", 70:72)
+```
+
+
+```{r setup, include=FALSE}
+complete <- function (directory, id = 1:332) {
+  
+  observations <- data.frame(colnames(c(id, nobs)))
+  NAcounts <- vector()
+  
+    for (i in id){
+      monitorID <- list.files(directory, pattern = paste(sprintf("%03d", i),".csv", sep = ""), full.names = TRUE)
+      monitordata <- read.csv(monitorID)
+      
+      for (columns in monitordata){
+        NAcounts <- sum(NAcounts, count(monitordata$columns, NA))
+      }        
+      newrow <- data.frame(c(i, NAcounts))  
+      observations <- rbind(observations,newrow)
+  }
+      observations
+}
+```
+
+```{r}
+complete <- function (directory, id = 1:332) {
+  
+  observations <- data.frame(id = character(), nobs = numeric())
+
+  for (i in id){
+      totaldata <- 0
+      monitorID <- list.files(directory, pattern = paste(sprintf("%03d", i),".csv", sep = ""), full.names = TRUE)
+      monitordata <- read.csv(monitorID)
+      pollutantdata <- subset.data.frame(
+        monitordata,
+        subset = !is.na(monitordata[,2]) & !is.na(monitordata[,3]),
+        select = c(sulfate, nitrate))
+      totaldata <- mean(colSums(!is.na(pollutantdata)))
+      newrow <- data.frame(id = i, nobs = totaldata)
+      observations <- rbind(observations, newrow)
+  }
+  observations
+    }
+
+```
+
+
+```{r}
+complete("specdata", 1)
+```
+
+
+```{r}
+complete("specdata", c(2, 4, 8, 10, 12))
+```
+
+
+```{r}
+complete("specdata", 30:25)
+```
+
+
+```{r}
+complete("specdata", 3)
+```
+
+
+```{r}
+corr <- function (directory, threshold = 0){
+    correlations <- numeric()
+    monitorlist <- list.files(directory, all.files = TRUE, full.names = TRUE, pattern = ".csv")
+  for (monitor in monitorlist){
+    monitordata <- read.csv(monitor)
+      monitordata <- subset.data.frame(
+        monitordata,
+        subset = !is.na(monitordata[,2]) & !is.na(monitordata[,3]),
+        select = c(sulfate, nitrate))
+      id <- which(monitor == monitorlist)
+      observations <- complete(directory, id)
+      if (observations$nobs > threshold){
+        correlations <- c(correlations, cor(x = monitordata$nitrate, y = monitordata$sulfate))
+      }
+  }
+    correlations
+}
+```
+
+```{r}
+cr <- corr("specdata", 150)
+head(cr)
+```
+```{r}
+summary(cr)
+```
+```{r}
+cr <- corr("specdata", 400)
+head(cr)
+```
+```{r}
+summary(cr)
+
+```
+```{r}
+cr <- corr("specdata", 5000)
+summary(cr)
+```
+```{r}
+length(cr)
+```
+```{r}
+cr <- corr("specdata")
+summary(cr)
+```
+```{r}
+length(cr)
+```
+
+
+
+
+
+
+
+
+
+
+
+
